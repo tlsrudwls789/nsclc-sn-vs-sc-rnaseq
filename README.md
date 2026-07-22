@@ -46,9 +46,10 @@ script. Scripts automatically create output directories if they do not exist.
 
 ## Data availability
 
-Raw sequencing data are deposited in the European Genome-phenome Archive (EGA)
-under controlled access. Accession numbers are provided in the manuscript.
-Due to patient privacy restrictions, raw data are not included in this repository.
+Raw sequencing data are deposited in the Gene Expression Omnibus (GEO) under
+the accession number(s) listed in the manuscript. This repository contains 
+the analysis code and processed data; raw sequencing files are not included 
+and should be obtained from GEO.
 
 ---
 
