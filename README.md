@@ -47,7 +47,7 @@ script. Scripts automatically create output directories if they do not exist.
 ## Data availability
 
 Raw sequencing data are deposited in the Gene Expression Omnibus (GEO) under
-the accession number(s) listed in the manuscript. This repository contains 
+the accession number provided in the manuscript. This repository contains 
 the analysis code and processed data; raw sequencing files are not included 
 and should be obtained from GEO.
 
