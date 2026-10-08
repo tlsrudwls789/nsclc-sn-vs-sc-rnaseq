@@ -1,5 +1,5 @@
 # =============================================================================
-# 02_Analysis_Result2 (Fig2, Sup Fig 3) — GitHub-ready SINGLE script (functions-only)
+# Figure 2a-c (subtype proportions, SMC and public datasets) — functions-only script
 # -----------------------------------------------------------------------------
 # Policy:
 # - NO auto-detection of celltype columns (you must pass which one to use)
@@ -8,7 +8,7 @@
 #
 # Core outputs supported:
 # 1) Fig2: Dot heatmap (dot size = proportion) comparing NUC vs CELL by sample
-# 2) Sup Fig 3f-like: frequency boxplot (per-sample) + Wilcoxon p-value labels
+# 2) Per-sample frequency boxplot + Wilcoxon p-value labels (helper; not a final figure panel)
 #    - p-value threshold updated to p < 0.005
 # =============================================================================
 
@@ -203,7 +203,7 @@ plot_dot_heatmap_two_platforms <- function(seu_nuc, seu_cell,
 }
 
 # =============================================================================
-# 3) Sup Fig 3f: per-sample frequency boxplot + Wilcoxon labels (explicit mapping)
+# 3) Per-sample frequency boxplot + Wilcoxon labels (explicit mapping; helper)
 # =============================================================================
 # - No auto-detect: you pass sample_col, group_col, platform_col, tissue_col
 # - Creates platform_TissueDiseaseState internally: e.g., NUC_N, CELL_T
@@ -366,7 +366,7 @@ plot_freq_boxplot_explicit <- function(freq_out,
 #   bronchial_types=c("Secretory_Club","Ciliated","Secretory_Goblet")
 # )
 #
-# ---- Sup Fig 3f-like frequency boxplot (explicit) ----
+# ---- Per-sample frequency boxplot (explicit; helper) ----
 # out_freq <- freq_boxplot_stats_explicit(
 #   seu = combined,
 #   group_col = "celltype3",

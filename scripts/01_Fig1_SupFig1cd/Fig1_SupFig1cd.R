@@ -8,8 +8,15 @@ suppressPackageStartupMessages({
   library(RColorBrewer)})
 
 ## =============================================================================
-## Result 1: Figure 1 + Supplementary Figure 1–2 (GitHub-ready single script)
-## - Outputs are saved under: {mother.path}/Seurat_results/
+## Figure 1b-d and Supplementary Figure 1c-d (SMC cohort, snRNA-seq + scRNA-seq)
+##   Fig. 1b  UMAPs: cell type, platform x tissue state, CopyKAT CNV status
+##   Fig. 1c  major cell type frequencies per platform-tissue group (Wilcoxon)
+##   Fig. 1d  within-patient paired proportions, snRNA-seq vs scRNA-seq
+##   Sup. Fig. 1c  FeaturePlots of lineage markers
+##   Sup. Fig. 1d  sub-cell type UMAPs per platform
+## Usage: DATA_DIR=<dir with the integrated Seurat RDS> OUT_DIR=<output dir> Rscript <this script>
+##   required meta columns: orig.ident, platform, TissueDiseaseState, celltype,
+##   celltype2, celltype3, CopyKAT
 ## =============================================================================
 
 ## =========================
@@ -19,13 +26,13 @@ pc.num  <- 21
 res.num <- 0.6
 label   <- "LUNG_Integration"
 
-mother.path <- "D:/tlsrudwls/Analysis/lung/LungCancer_2nd_NUC_v7/Seurat_Harmony_Integration_2025/"
-out.dir     <- file.path(mother.path, "Seurat_results")
+data.dir <- Sys.getenv("DATA_DIR", "data")
+out.dir  <- Sys.getenv("OUT_DIR",  "Fig1_out")
 if (!dir.exists(out.dir)) dir.create(out.dir, recursive = TRUE)
 setwd(out.dir)
 
 sr3.rds <- file.path(
-  mother.path, "Seurat_results",
+  data.dir,
   sprintf("LUNG_Integration.qc500_pc%s_res%s_Seurat4.4.0_final_wMeta.rds", pc.num, res.num))
 stopifnot(file.exists(sr3.rds))
 sr3 <- readRDS(sr3.rds)
@@ -172,10 +179,10 @@ nuc.obj  <- subset(sr3, platform == "NUC")
 cell.obj <- subset(sr3, platform == "CELL")
 
 ## =========================
-## 3) Result 1 — Figure 1
+## 3) Figure 1b-d
 ## =========================
 
-## Fig 1b: UMAP by platform + tissue
+## Fig 1b (middle): UMAP by platform x tissue state
 p_fig1b <- DimPlot(
   sr3, reduction = "umap",
   group.by = "platform_TissueDiseaseState",
@@ -186,14 +193,24 @@ p_fig1b <- DimPlot(
 
 save_pdf(p_fig1b, sprintf("Fig1b_UMAP_platformTissue_%s_pc%s.pdf", label, pc.num), w = 6, h = 6)
 
-## Fig 1: UMAP by celltype
+## Fig 1b (left): UMAP by cell type
 p_fig1_celltype <- DimPlot(sr3, reduction = "umap", group.by = "celltype", pt.size = 0.1) +
   scale_color_manual(values = celltype.colors) +
   theme_umap(base_size = 9) +
   theme(legend.title = element_blank()) +
   guides(colour = guide_legend(override.aes = list(size = 2.5)))
 
-save_pdf(p_fig1_celltype, sprintf("Fig1_UMAP_celltype_%s_pc%s.pdf", label, pc.num), w = 6.5, h = 6)
+save_pdf(p_fig1_celltype, sprintf("Fig1b_UMAP_celltype_%s_pc%s.pdf", label, pc.num), w = 6.5, h = 6)
+
+## Fig 1b (right): UMAP by CopyKAT CNV status (cells without a call are shown as not.defined)
+copykat.colors <- c("aneuploid" = "red", "diploid" = "#1F4172", "not.defined" = "darkgrey")
+sr3$CopyKAT_plot <- ifelse(sr3$CopyKAT %in% c("aneuploid", "diploid"), as.character(sr3$CopyKAT), "not.defined")
+p_fig1b_cnv <- DimPlot(sr3, reduction = "umap", group.by = "CopyKAT_plot", pt.size = 0.1) +
+  scale_color_manual(values = copykat.colors) +
+  theme_umap(base_size = 9) +
+  theme(legend.title = element_blank()) +
+  guides(colour = guide_legend(override.aes = list(size = 2.5)))
+save_pdf(p_fig1b_cnv, sprintf("Fig1b_UMAP_CopyKAT_%s_pc%s.pdf", label, pc.num), w = 6.5, h = 6)
 
 ## Fig 1d: paired proportions (celltype), split Normal/Tumor
 pair_df1d <- make_pairwise_df(nuc.obj, cell.obj, group_label = "Total", celltype_col = "celltype")
@@ -202,7 +219,7 @@ p_fig1d   <- plot_paired(pair_df1d, "Total", celltype_order = celltype.order,
 
 save_pdf(p_fig1d, sprintf("Fig1d_PairedProp_NormalTumor_%s_pc%s.pdf", label, pc.num), w = 9.5, h = 3.5)
 
-## Fig 1f: boxplot per celltype with Wilcoxon labels
+## Fig 1c: frequency boxplot per cell type with Wilcoxon labels (raw P)
 data_freq <- sr3@meta.data %>%
   group_by(orig.ident, platform_TissueDiseaseState, celltype) %>%
   summarise(n_celltype = n(), .groups = "drop") %>%
@@ -247,7 +264,7 @@ stat_res <- stat_res %>%
   mutate(y.position = y.max + 0.05 * (row_number() - 1)) %>%
   ungroup()
 
-p_fig1f <- ggplot(data_freq, aes(x = platform_TissueDiseaseState, y = frequency)) +
+p_fig1c <- ggplot(data_freq, aes(x = platform_TissueDiseaseState, y = frequency)) +
   geom_boxplot(aes(fill = platform_TissueDiseaseState), outlier.shape = NA, alpha = 0.7) +
   geom_jitter(aes(color = platform_TissueDiseaseState), width = 0.15, size = 1, alpha = 0.8) +
   scale_fill_manual(values = p.TissueDiseaseState.colors) +
@@ -271,10 +288,10 @@ p_fig1f <- ggplot(data_freq, aes(x = platform_TissueDiseaseState, y = frequency)
     xmin = "group1", xmax = "group2",
     y.position = "y.position")
 
-save_pdf(p_fig1f, sprintf("Fig1f_FrequencyBoxplot_Wilcox_%s_pc%s.pdf", label, pc.num), w = 16.2, h = 2.95)
+save_pdf(p_fig1c, sprintf("Fig1c_FrequencyBoxplot_Wilcox_%s_pc%s.pdf", label, pc.num), w = 16.2, h = 2.95)
 
 ## =========================
-## 4) Result 1 — Supplementary Figure 1
+## 4) Supplementary Figure 1c-d
 ## =========================
 target.list <- list(
   Epithelial   = c("EPCAM","KRT18"),
@@ -315,39 +332,5 @@ save_pdf(p_sup1d_nuc_ct2,  "SupFig1d_UMAP_NUC_celltype2.pdf",  w = 5.3, h = 4.8)
 save_pdf(p_sup1d_nuc_ct3,  "SupFig1d_UMAP_NUC_celltype3.pdf",  w = 5.3, h = 4.8)
 save_pdf(p_sup1d_cell_ct2, "SupFig1d_UMAP_CELL_celltype2.pdf", w = 5.3, h = 4.8)
 save_pdf(p_sup1d_cell_ct3, "SupFig1d_UMAP_CELL_celltype3.pdf", w = 5.3, h = 4.8)
-
-## =========================
-## 5) Result 1 — Supplementary Figure 2d–f
-## =========================
-## IMPORTANT:
-## You must load/create these objects before this section:
-##   epi.nuc.obj, epi.cell.obj, endo.nuc.obj, endo.cell.obj, fibro.nuc.obj, fibro.cell.obj
-## Each object must contain: orig.ident, celltype4, TissueDiseaseState
-
-# ---- Build paired dfs (celltype4) ----
-epi_df   <- make_pairwise_df(epi.nuc.obj,   epi.cell.obj,   group_label = "Epithelial",  celltype_col = "celltype4")
-endo_df  <- make_pairwise_df(endo.nuc.obj,  endo.cell.obj,  group_label = "Endothelial", celltype_col = "celltype4")
-fibro_df <- make_pairwise_df(fibro.nuc.obj, fibro.cell.obj, group_label = "Fibroblast",  celltype_col = "celltype4")
-
-# ---- Sup Fig 2d: paired (no N/T split) ----
-p_2d_epi   <- plot_paired(epi_df,   "Epithelial",  celltype_order = unique(epi_df$celltype),  split_by_tissue = FALSE, label_samples = FALSE)
-p_2d_endo  <- plot_paired(endo_df,  "Endothelial", celltype_order = unique(endo_df$celltype), split_by_tissue = FALSE, label_samples = FALSE)
-p_2d_fibro <- plot_paired(fibro_df, "Fibroblast",  celltype_order = unique(fibro_df$celltype), split_by_tissue = FALSE, label_samples = FALSE)
-
-save_pdf(p_2d_epi,   "SupFig2d_Paired_Epithelial.pdf",  w = 9,  h = 3)
-save_pdf(p_2d_endo,  "SupFig2d_Paired_Endothelial.pdf", w = 9,  h = 3)
-save_pdf(p_2d_fibro, "SupFig2d_Paired_Fibroblast.pdf",  w = 9,  h = 3)
-
-# ---- Sup Fig 2e–f: paired + split Normal/Tumor ----
-p_2e_epi  <- plot_paired(epi_df,  "Epithelial",  celltype_order = unique(epi_df$celltype),
-                         split_by_tissue = TRUE, label_samples = TRUE, scales = "fixed", base_size = 9.7)
-p_2e_endo <- plot_paired(endo_df, "Endothelial", celltype_order = unique(endo_df$celltype),
-                         split_by_tissue = TRUE, label_samples = TRUE, scales = "fixed", base_size = 9.7)
-p_2f_fibro <- plot_paired(fibro_df, "Fibroblast", celltype_order = unique(fibro_df$celltype),
-                          split_by_tissue = TRUE, label_samples = TRUE, scales = "fixed", base_size = 9.7)
-
-save_pdf(p_2e_epi,   "SupFig2e_Paired_Epithelial_NormalTumor.pdf",  w = 11.4, h = 4.3)
-save_pdf(p_2e_endo,  "SupFig2e_Paired_Endothelial_NormalTumor.pdf", w = 11.4, h = 4.3)
-save_pdf(p_2f_fibro, "SupFig2f_Paired_Fibroblast_NormalTumor.pdf",  w = 11.4, h = 4.3)
 
 message("Done. Outputs saved to: ", out.dir)

@@ -1,5 +1,5 @@
 ###############################################################################
-# GitHub-ready single script
+# Figure 4a-j: AT2-to-AT1 trajectories (Monocle2) and TF regulon activity (SCENIC)
 # Seurat (sn/sc) -> Monocle2 (AT1/AT2) -> SCENIC summary
 # Outputs: UMAP, DotPlot, Monocle pseudotime/cluster/celltype, TF-marker cor dotplot, AUC heatmap
 ###############################################################################

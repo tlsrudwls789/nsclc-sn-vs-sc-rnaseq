@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
 ############################################################
-# run_liana_lr_EL.R
+# Figure 6a-b: ligand-receptor analysis of epithelial Early/Late states
+# (Early/Late labels come from scripts/11_SupFig7_early_late)
 # ----------------------------------------------------------
 # End-to-end LR analysis for epithelial Early/Late states
 # across platforms (NUC vs CELL), using LIANA (Consensus).
@@ -268,7 +269,7 @@ assay5_restore_layer_dimnames <- function(a, layer_name) {
 }
 
 # -----------------------------
-# 3) LIANA prep: LR_CellGroup 정의 (EPI receivers staged)
+# 3) LIANA prep: define LR_CellGroup (EPI receivers staged)
 # -----------------------------
 .short_label <- function(x) {
   x <- as.character(x)

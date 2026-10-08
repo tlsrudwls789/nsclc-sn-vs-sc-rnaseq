@@ -1,5 +1,5 @@
 ################################################################################
-## 02_Analysis_Result2_GitHub_single_script.R
+## Figure 3a-c and Supplementary Figure 4a-b
 ## Purpose:
 ## - In-house integrated dataset only
 ## - DEG (single-cell) + pseudo-bulk (sn vs sc) across 5 shared cell types

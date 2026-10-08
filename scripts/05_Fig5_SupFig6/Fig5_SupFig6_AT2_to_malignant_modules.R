@@ -1,4 +1,5 @@
 ############################################################
+## Figure 5a-h and Supplementary Figure 6a-d
 ## Core6-only: Module definition -> enrichment -> corr heatmaps
 ##            -> attach M1–M4 scores + dominant module to Seurat
 ##            -> plots (violin/topgenes/fraction/umap)
@@ -461,7 +462,7 @@ run_term2gene_all <- function(genes_sym, universe_sym, term2gene){
   )
 }
 
-## MSigDB term2gene 구성 (H + C2:CP + lung/cancer CGP subset)
+## MSigDB term2gene set (H + C2:CP + lung/cancer CGP subset)
 ms_h <- msigdbr(species="Homo sapiens", category="H") %>%
   transmute(term = paste0("H:", gs_name), gene = gene_symbol) %>% distinct()
 
